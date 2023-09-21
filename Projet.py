@@ -1,4 +1,9 @@
 import ipaddress
+import sqlite3
+conn = sqlite3.connect("securityDB.db")
+cur = conn.cursor()
+#cur.execute("Drop table Password")
+#cur.execute("CREATE TABLE Password(password CHAR(60) NOT NULL DEFAULT)")
 
 
 def ipInput():
@@ -46,7 +51,20 @@ def calculer_adresses(ip_str, masque_str):
     except ipaddress.AddressValueError:
         return "Adresse IP ou masque invalide."
 
+def verifier_appartenance(ip_str, reseau_str, masque_str):
+    try:
+        # Valider l'adresse IP et le réseau
+        ip = ipaddress.IPv4Address(ip_str)
+        reseau = ipaddress.IPv4Network(f"{reseau_str}/{masque_str}", strict=False)
 
+        # Vérifier si l'adresse IP appartient au réseau
+        if ip in reseau:
+            return f"L'adresse IP {ip_str} appartient au réseau {reseau_str}."
+        else:
+            return f"L'adresse IP {ip_str} n'appartient pas au réseau {reseau_str}."
+
+    except ipaddress.AddressValueError:
+        return "Adresse IP, masque ou réseau invalide."
 
 while True:
     print("Menu:")
@@ -64,11 +82,15 @@ while True:
         resultats = calculer_adresses(ip, masque)
 
         print ('Voulez-vous une découpe en sous-réseaux ? (oui/non) ')
-        reponse = input()
+        print("1. Oui")
+        print("2. Non")
+        reponse = input("Choisissez une option (1/2): ")
 
-        if reponse=="oui":
+        if reponse=="1":
             if isinstance(resultats, tuple):
                 adresse_reseau, adresse_broadcast, adresse_sous_reseau = resultats
+                print(f"Adresse de l'ip: {ip}")
+                print(f"Adresse du masque: {masque}")
                 print(f"Adresse du réseau: {adresse_reseau}")
                 print(f"Adresse de broadcast: {adresse_broadcast}")
                 print(f"Adresse du sous-réseau: {adresse_sous_reseau}")
@@ -79,7 +101,9 @@ while True:
         else:
            
             if isinstance(resultats, tuple):
-                adresse_reseau, adresse_broadcast, adresse_sous_reseau = resultats
+                adresse_reseau, adresse_broadcast , adresse_sous_reseau = resultats
+                print(f"Adresse de l'ip: {ip}")
+                print(f"Adresse du masque: {masque}")
                 print(f"Adresse du réseau: {adresse_reseau}")
                 print(f"Adresse de broadcast: {adresse_broadcast}")
                 
@@ -89,7 +113,12 @@ while True:
             
 
     elif choix == "2":
-            print()
+        # Demandez à l'utilisateur d'entrer l'adresse IP, le réseau et le masque
+        ip=ipInput()
+        masque = maskInput(ip)
+        reseau = input("Entrez l'adresse du réseau: ")
+        resultat = verifier_appartenance(ip, reseau, masque)
+        print(resultat)
     elif choix == "3":
             print()
     elif choix == "4":
