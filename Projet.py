@@ -1,58 +1,39 @@
-import hashlib
 import ipaddress
 import math
-import os
 import sqlite3
-import bcrypt
+import bcrypt  
 
 conn = sqlite3.connect("securityDB.db")
 cur = conn.cursor()
+cur.execute("CREATE TABLE IF NOT EXISTS Users (username TEXT NOT NULL, password_hash TEXT NOT NULL)")
 
-query = "DROP TABLE IF EXISTS login"
-cur.execute(query)
-conn.commit()
+def hash_password(password):
+    salt = bcrypt.gensalt()
+    password_hash = bcrypt.hashpw(password.encode(), salt)
+    return password_hash
 
-query = "CREATE TABLE login(Username VARCHAR UNIQUE, Password VARCHAR)"
-cur.execute(query)
-conn.commit()
-
-#cur.execute("DELETE FROM Users")
 def add_user(username, password):
-    query = "INSERT INTO login (Username, Password) VALUES (?, ?)"
-    hashable_pw = bytes(password, encoding='utf-8')
-    hashed_pw = bcrypt.hashpw(hashable_pw, bcrypt.gensalt())
-    cur.execute(query, (username, hashed_pw))
+    password_hash = hash_password(password)
+    cur.execute("INSERT INTO Users (username, password_hash) VALUES (?, ?)", (username, password_hash.decode()))
     conn.commit()
 
 def check_password(username, password):
-    cur.execute('SELECT * FROM login WHERE Username = ?', (username,))
+    cur.execute("SELECT password_hash FROM Users WHERE username = ?", (username,))
     result = cur.fetchone()
-    conn.commit()
-
-    if result is not None:
-        stored_password = result[1]  # Colonne du mot de passe dans la table
-        print(stored_password)
-        if stored_password == password:
-            print('Mot de passe correct.')
-            return True
-        else:
-            print('Mot de passe incorrect.')
-            return False
-    else:
-        print('Utilisateur non trouvé.')
-        return False
-
-
-
+    if result:
+        stored_hash = result[0].encode()
+        return bcrypt.checkpw(password.encode(), stored_hash)
+    return False
 
 def remove_user(username, password):
-    cur.execute("DELETE FROM Users WHERE username = ? AND password = ?", (username, password))
+    cur.execute("DELETE FROM Users WHERE username = ?", (username,))
     conn.commit()
+
 
 def ipInput():
     while True:
         try:
-            ip = "172.16.0.0"
+            ip = "192.168.10.0"
             #ip = input("Veuillez entrez une ip:")
             return ipaddress.ip_address(ip)
         except ValueError:
@@ -61,7 +42,7 @@ def ipInput():
 def maskInput(ip):
     while True :
         try:
-            masque = "255.255.0.0"
+            masque = "255.255.255.0"
             #masque = input("Veuillez entrez un masque:")
             mask = ipaddress.IPv4Network(f"{ip}/{masque}", strict=False)
             return mask.netmask # verification si la variable est un masque
@@ -99,15 +80,26 @@ def calculer_adresses(ip_str, masque_str):
     except ipaddress.AddressValueError:
         return "Adresse IP ou masque invalide."
 
-def calculSR_selonIPS(adresse_reseau, masque, nbips):
+def calculSR_selonIPS(adresse_reseau, masque, nbips ):
     try:
 
+        # Valider l'adresse de réseau et le masque
+        reseau = ipaddress.IPv4Network(f"{adresse_reseau}/{masque}", strict=False)
+
+        # Calculer le nombre d'adresses disponibles par sous-réseau
+        nombre_adresses_disponibles = reseau.num_addresses
+
+
+        # Vérifier si le nombre d'IP souhaité par sous-réseau est valide
+        if 2 <= nbips <= nombre_adresses_disponibles:
             # Trouver le masque de sous-réseau approprié
             masque_sous_reseau = reseau.prefixlen + int(math.log2(nbips))
             nouveau_masque = ipaddress.IPv4Network(f"{adresse_reseau}/{masque_sous_reseau}", strict=False).netmask
             # Calculer le pas (nombre d'adresses entre les sous-réseaux)
             pas = nbips
-            return nouveau_masque, ((pas-2)*2)+2
+            return nouveau_masque, ((pas-2)*2)+2 
+        else:
+            return "Le nombre d'IP souhaité par sous-réseau n'est pas valide."
 
     except (ipaddress.AddressValueError, ValueError):
         return "Adresse de réseau ou masque invalide."
@@ -155,8 +147,8 @@ while True:
 
     if auth_choice == "1":
         username = input("Nom d'utilisateur : ")
-        password = input("Mot de passe : ")
-        if check_password(username, password):
+        password_hash = input("Mot de passe : ")
+        if check_password(username, password_hash):
             print("Connexion réussie en tant qu'utilisateur", username)
             break
         else:
@@ -164,15 +156,15 @@ while True:
 
     elif auth_choice == "2":
         username = input("Nom d'utilisateur : ")
-        password = input("Mot de passe : ")
-        add_user(username, password)
+        password_hash = input("Mot de passe : ")
+        add_user(username, password_hash)
         print("Utilisateur ajouté avec succès.")
 
     elif auth_choice == "3":
         username = input("Nom d'utilisateur : ")
-        password = input("Mot de passe : ")
-        if check_password(username, password):
-            remove_user(username, password)
+        password_hash = input("Mot de passe : ")
+        if check_password(username, password_hash):
+            remove_user(username, password_hash)
             print("Utilisateur supprimé avec succès.")
         else:
             print("Échec de la suppression. Vérifiez vos informations d'identification.")
@@ -283,11 +275,12 @@ while True:
                     print("| %16s | %16s | %16s | %16s |" % (adresse_reseau_actuel, adresse_reseau_actuel + 1, derniereip, broadcast))
 
             if reponse == "3":
-                nbips = int(input("Combien d'IPs souhaitez-vous avoir par sous-réseau ? (max :", ips_maximum_possible_par_sous_reseaux, ")"))
+                print("max :", ips_maximum_possible_par_sous_reseaux, ")")
+                nbips = int(input("Combien d'IPs souhaitez-vous avoir par sous-réseau ? "))
                 while nbips > ips_maximum_possible_par_sous_reseaux:
                     nbips = int(input("Erreur, l'adresse réseau ne peut pas accueillir autant d'IPs"))
 
-                nouvMasqueSR, pas = calculSR_selonIPS(adresse_reseau, masque, nbips)
+                nouvMasqueSR, pas = calculSR_selonIPS(adresse_reseau, masque, nbips )
                 print(nouvMasqueSR, pas)
 
                 print("| IP sous-réseau   | 1er IP           | Dernière IP      | IP de broadcast   |")
