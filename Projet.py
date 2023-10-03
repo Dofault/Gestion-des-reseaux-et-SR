@@ -1,19 +1,49 @@
+import hashlib
 import ipaddress
 import math
+import os
 import sqlite3
+import bcrypt
 
 conn = sqlite3.connect("securityDB.db")
 cur = conn.cursor()
-# Création de la table des utilisateurs
-cur.execute("CREATE TABLE IF NOT EXISTS Users (username TEXT NOT NULL, password TEXT NOT NULL)")
+
+query = "DROP TABLE IF EXISTS login"
+cur.execute(query)
+conn.commit()
+
+query = "CREATE TABLE login(Username VARCHAR UNIQUE, Password VARCHAR)"
+cur.execute(query)
+conn.commit()
+
 #cur.execute("DELETE FROM Users")
 def add_user(username, password):
-    cur.execute("INSERT INTO Users (username, password) VALUES (?, ?)", (username, password))
+    query = "INSERT INTO login (Username, Password) VALUES (?, ?)"
+    hashable_pw = bytes(password, encoding='utf-8')
+    hashed_pw = bcrypt.hashpw(hashable_pw, bcrypt.gensalt())
+    cur.execute(query, (username, hashed_pw))
     conn.commit()
 
 def check_password(username, password):
-    cur.execute("SELECT * FROM Users WHERE username = ? AND password = ?", (username, password))
-    return cur.fetchone() is not None
+    cur.execute('SELECT * FROM login WHERE Username = ?', (username,))
+    result = cur.fetchone()
+    conn.commit()
+
+    if result is not None:
+        stored_password = result[1]  # Colonne du mot de passe dans la table
+        print(stored_password)
+        if stored_password == password:
+            print('Mot de passe correct.')
+            return True
+        else:
+            print('Mot de passe incorrect.')
+            return False
+    else:
+        print('Utilisateur non trouvé.')
+        return False
+
+
+
 
 def remove_user(username, password):
     cur.execute("DELETE FROM Users WHERE username = ? AND password = ?", (username, password))
