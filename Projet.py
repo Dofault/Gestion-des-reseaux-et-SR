@@ -1,3 +1,4 @@
+
 import ipaddress
 import math
 import sqlite3
@@ -33,21 +34,21 @@ def remove_user(username, password):
 def ipInput():
     while True:
         try:
-            ip = "192.168.10.0"
-            #ip = input("Veuillez entrez une ip:")
+            ip = "192.168.10.1"
+            #ip = input("\nVeuillez entrez une ip:")
             return ipaddress.ip_address(ip)
         except ValueError:
-            print("L'ip n'est pas valideS")
+            print("\nL'ip n'est pas valideS")
 
 def maskInput(ip):
     while True :
         try:
             masque = "255.255.255.0"
-            #masque = input("Veuillez entrez un masque:")
+            #masque = input("\nVeuillez entrez un masque:")
             mask = ipaddress.IPv4Network(f"{ip}/{masque}", strict=False)
             return mask.netmask # verification si la variable est un masque
         except (ipaddress.AddressValueError, ValueError):
-            print("Le masque n'est pas valide")
+            print("\nLe masque n'est pas valide")
 
 def calculer_adresses(ip_str, masque_str):
     try:
@@ -137,54 +138,60 @@ def verifier_appartenance(ip_str, reseau_str, masque_str):
 
 # Authentification
 while True:
-    print("Authentification :")
-    print("1. Se connecter")
-    print("2. Ajouter un utilisateur")
-    print("3. Supprimer un utilisateur")
-    print("4. Quitter")
+    print("\n--------------------")
+    print("| Authentification |")
+    print("--------------------\n")
+    print("1. Se connecter\n")
+    print("2. Ajouter un utilisateur\n")
+    print("3. Supprimer un utilisateur\n")
+    print("4. Quitter\n")
 
-    auth_choice = input("Choisissez une option (1/2/3/4): ")
+    auth_choice = input("\nChoisissez une option (1/2/3/4): ")
+    print("\n")
 
     if auth_choice == "1":
-        username = input("Nom d'utilisateur : ")
-        password_hash = input("Mot de passe : ")
+        username = input("\nNom d'utilisateur : ")
+        password_hash = input("\nMot de passe : ")
         if check_password(username, password_hash):
-            print("Connexion réussie en tant qu'utilisateur", username)
+            print("\nConnexion réussie en tant qu'utilisateur", username , "\n")
             break
         else:
-            print("Échec de la connexion. Vérifiez vos informations d'identification.")
+            print("\nÉchec de la connexion. Vérifiez vos informations d'identification.")
 
     elif auth_choice == "2":
-        username = input("Nom d'utilisateur : ")
-        password_hash = input("Mot de passe : ")
+        username = input("Nom d'utilisateur : \n")
+        password_hash = input("Mot de passe : \n")
         add_user(username, password_hash)
-        print("Utilisateur ajouté avec succès.")
+        print("\nUtilisateur ajouté avec succès.\n")
 
     elif auth_choice == "3":
-        username = input("Nom d'utilisateur : ")
-        password_hash = input("Mot de passe : ")
+        username = input("Nom d'utilisateur : \n")
+        password_hash = input("Mot de passe : \n")
         if check_password(username, password_hash):
             remove_user(username, password_hash)
-            print("Utilisateur supprimé avec succès.")
+            print("\nUtilisateur supprimé avec succès.")
         else:
-            print("Échec de la suppression. Vérifiez vos informations d'identification.")
+            print("\nÉchec de la suppression. Vérifiez vos informations d'identification.")
 
     elif auth_choice == "4":
-        print("Au revoir !")
+        print("\nAu revoir !\n")
         exit()
 
     else:
-        print("Option invalide. Choisissez 1, 2, 3 ou 4.")
+        print("\nOption invalide. Choisissez 1, 2, 3 ou 4.")
 
 # Menu principal après l'authentification
 while True:
-    print("Menu principal:")
-    print("1. Calculer l'adresse de réseau, l'adresse de broadcast et l'adresse du sous-réseau")
-    print("2. Vérifier si une adresse IP appartient à un réseau")
-    print("3. Calculer le plan d'adressage")
-    print("4. Quitter")
+    print("\n----------------------")
+    print("|   Menu principal   |")
+    print("----------------------\n")
+    print("\n1. Calculer l'adresse de réseau, l'adresse de broadcast et l'adresse du sous-réseau\n")
+    print("2. Vérifier si une adresse IP appartient à un réseau\n")
+    print("3. Calculer le plan d'adressage\n")
+    print("4. Quitter\n")
 
-    choix = input("Choisissez une option (1/2/3/4): ")
+    choix = input("\nChoisissez une option (1/2/3/4): ")
+    print("\n")
 
     if choix == "1":
         # Demandez à l'utilisateur d'entrer l'adresse IP et le masque
@@ -193,43 +200,48 @@ while True:
         sous_reseaux_maximum_possibles = int()
         ips_maximum_possible_par_sous_reseaux = int()
         resultats = calculer_adresses(ip, masque)
+        
+        while True:
+            print('\nVoulez-vous une découpe en sous-réseaux ? (oui/non) \n')
+            print("1. Oui\n")
+            print("2. Non\n")
+            reponse = input("\nChoisissez une option (1/2): ")
+            print("\n")
+        
+            if reponse == "1":
+                if isinstance(resultats, tuple):
+                    adresse_reseau, adresse_broadcast, adresse_sous_reseau, sous_reseaux_maximum_possibles, ips_maximum_possible_par_sous_reseaux = resultats
+                    print(f"Adresse IP introduite: {ip}")
+                    print(f"Masque du réseau: {masque}")
+                    print(f"Adresse réseau: {adresse_reseau}")
+                    print(f"Adresse de broadcast: {adresse_broadcast}")
+                    print(f"1er IP du premier sous-réseau: {adresse_sous_reseau}")
+                    print(f"Nombre de sous-réseaux maximum possibles : {sous_reseaux_maximum_possibles}")
+                    print(f"Nombre d'IPs maximum possibles par sous-réseau : {ips_maximum_possible_par_sous_reseaux}")
 
-        print('Voulez-vous une découpe en sous-réseaux ? (oui/non) ')
-        print("1. Oui")
-        print("2. Non")
-        reponse = input("Choisissez une option (1/2): ")
+                else:
+                    print(resultats)
+                break
+            elif reponse == "2":
 
-        if reponse == "1":
-            if isinstance(resultats, tuple):
-                adresse_reseau, adresse_broadcast, adresse_sous_reseau, sous_reseaux_maximum_possibles, ips_maximum_possible_par_sous_reseaux = resultats
-                print(f"Adresse IP introduite: {ip}")
-                print(f"Masque du réseau: {masque}")
-                print(f"Adresse réseau: {adresse_reseau}")
-                print(f"Adresse de broadcast: {adresse_broadcast}")
-                print(f"1er IP du premier sous-réseau: {adresse_sous_reseau}")
-                print(f"Nombre de sous-réseaux maximum possibles : {sous_reseaux_maximum_possibles}")
-                print(f"Nombre d'IPs maximum possibles par sous-réseau : {ips_maximum_possible_par_sous_reseaux}")
+                if isinstance(resultats, tuple):
+                    adresse_reseau, adresse_broadcast, adresse_sous_reseau, sous_reseaux_maximum_possibles, ips_maximum_possible_par_sous_reseaux = resultats
+                    print(f"Adresse IP introduite: {ip}")
+                    print(f"Masque du réseau: {masque}")
+                    print(f"Adresse réseau: {adresse_reseau}")
+                    print(f"Adresse de broadcast: {adresse_broadcast}")
 
+                else:
+                    print(resultats)
+                break              
             else:
-                print(resultats)
-
-        else:
-
-            if isinstance(resultats, tuple):
-                adresse_reseau, adresse_broadcast, adresse_sous_reseau, sous_reseaux_maximum_possibles, ips_maximum_possible_par_sous_reseaux = resultats
-                print(f"Adresse IP introduite: {ip}")
-                print(f"Masque du réseau: {masque}")
-                print(f"Adresse réseau: {adresse_reseau}")
-                print(f"Adresse de broadcast: {adresse_broadcast}")
-
-            else:
-                print(resultats)
+                print("\nOption invalide. Choisissez 1 ou 2.")
 
     elif choix == "2":
         # Demandez à l'utilisateur d'entrer l'adresse IP, le réseau et le masque
         ip = ipInput()
         masque = maskInput(ip)
-        reseau = input("Entrez l'adresse du réseau : ")
+        reseau = input("\nEntrez l'adresse du réseau : ")
         resultat = verifier_appartenance(ip, reseau, masque)
         print(resultat)
 
@@ -249,13 +261,13 @@ while True:
             print(f"Adresse de broadcast: {adresse_broadcast}")
             
 
-            print('Souhaitez-vous découper les sous-réseaux en définissant :')
-            print("1. Le nombre d'hote possible")
-            print("2. Le nombre de sous-réseaux souhaité")
-            print("3. Le nombre d'IPs souhaité par sous-réseau")
-            reponse = input("Choisissez une option (1/2): ")
-
-            if reponse == "1":  # Affichage de nombre d'Hote possible
+            print('\nSouhaitez-vous découper les sous-réseaux en définissant :\n')
+            print("1. Le nombre d'hote possible\n")
+            print("2. Le nombre de sous-réseaux souhaité\n")
+            print("3. Le nombre d'IPs souhaité par sous-réseau\n")
+            reponse = input("\nChoisissez une option (1/2/3): ")
+            print("\n")
+            if reponse == "1":  # Affichage de nombre d'Hote possible et de sous reseaux
                 print(f"Nombre de sous-réseaux maximum possibles : {sous_reseaux_maximum_possibles}")
                 print(f"Nombre d'Hote maximum possibles par sous-réseau : {ips_maximum_possible_par_sous_reseaux}")
 
@@ -267,12 +279,13 @@ while True:
                 nouvMasqueSR, pas = calculSR(adresse_reseau, masque, nbSR)
                 print(nouvMasqueSR, pas)
 
-                print("| IP sous-réseau   | 1er IP           | Dernière IP      | IP de broadcast   |")
+                print("| N°SR             | Adresse SR       | Adresse BC       | 1er IP           | Dernière IP      | Masque           | Nb machines dans le SR  |")
+                #print("| IP sous-réseau   | 1er IP           | Dernière IP      | IP de broadcast   |")
                 for i in range(nbSR):
                     adresse_reseau_actuel = ipaddress.IPv4Address(ipaddress.IPv4Address(adresse_reseau) + (pas * i))
                     broadcast = ipaddress.IPv4Address((adresse_reseau_actuel) + pas - 1)
                     derniereip = ipaddress.IPv4Address((adresse_reseau_actuel) + pas - 2)
-                    print("| %16s | %16s | %16s | %16s |" % (adresse_reseau_actuel, adresse_reseau_actuel + 1, derniereip, broadcast))
+                    print("| %16s | %16s | %16s | %16s | %16s | %16s | %23s |" % (i,adresse_reseau_actuel,broadcast ,adresse_reseau_actuel + 1, derniereip,nouvMasqueSR,ips_maximum_possible_par_sous_reseaux ))
 
             if reponse == "3":
                 print("max :", ips_maximum_possible_par_sous_reseaux, ")")
@@ -283,18 +296,20 @@ while True:
                 nouvMasqueSR, pas = calculSR_selonIPS(adresse_reseau, masque, nbips )
                 print(nouvMasqueSR, pas)
 
-                print("| IP sous-réseau   | 1er IP           | Dernière IP      | IP de broadcast   |")
+                print("| N°SR             | Adresse SR       | Adresse BC       | 1er IP           | Dernière IP      | Masque           | Nb machines dans le SR  |")
+                #print("| IP sous-réseau   | 1er IP           | Dernière IP      | IP de broadcast   |")
                 for i in range(nbips):
                     adresse_reseau_actuel = ipaddress.IPv4Address(ipaddress.IPv4Address(adresse_reseau) + (pas * i))
                     broadcast = ipaddress.IPv4Address((adresse_reseau_actuel) + pas -1)
                     derniereip = ipaddress.IPv4Address((adresse_reseau_actuel) + pas -2)
-                    print("| %16s | %16s | %16s | %16s |" % (adresse_reseau_actuel, adresse_reseau_actuel + 1, derniereip, broadcast))
+                    print("| %16s | %16s | %16s | %16s | %16s | %16s | %23s |" % (i,adresse_reseau_actuel,broadcast ,adresse_reseau_actuel + 1, derniereip,nouvMasqueSR,ips_maximum_possible_par_sous_reseaux))
 
         else:
             print(resultats)
 
     elif choix == "4":
+        print("\nAu revoir !\n")
         break
 
     else:
-        print("Option invalide. Choisissez 1, 2, 3 ou 4.")
+        print("\nOption invalide. Choisissez 1, 2, 3 ou 4.")
