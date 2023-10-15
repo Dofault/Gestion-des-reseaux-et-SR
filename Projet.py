@@ -1,9 +1,9 @@
 
 import ipaddress
 import math
+from operator import xor
 import sqlite3
-import bcrypt  
-
+import bcrypt
 conn = sqlite3.connect("securityDB.db")
 cur = conn.cursor()
 cur.execute("CREATE TABLE IF NOT EXISTS Users (username TEXT NOT NULL, password_hash TEXT NOT NULL)")
@@ -97,28 +97,27 @@ def calculer_adresses(ip_str, masque_str):
         return "Adresse IP ou masque invalide."
 
 def calculSR_selonIPS(adresse_reseau, masque, nbips ):
-    try:
-
-        # Valider l'adresse de réseau et le masque
-        reseau = ipaddress.IPv4Network(f"{adresse_reseau}/{masque}", strict=False)
-
-        # Calculer le nombre d'adresses disponibles par sous-réseau
-        nombre_adresses_disponibles = reseau.num_addresses
 
 
-        # Vérifier si le nombre d'IP souhaité par sous-réseau est valide
-        if 2 <= nbips <= nombre_adresses_disponibles:
-            # Trouver le masque de sous-réseau approprié
-            masque_sous_reseau = reseau.prefixlen + int(math.log2(nbips))
-            nouveau_masque = ipaddress.IPv4Network(f"{adresse_reseau}/{masque_sous_reseau}", strict=False).netmask
-            # Calculer le pas (nombre d'adresses entre les sous-réseaux)
-            pas = nbips
-            return nouveau_masque, ((pas-2)*2)+2 
-        else:
-            return "Le nombre d'IP souhaité par sous-réseau n'est pas valide."
+    nbZero = (bin(int(masque)).count('0') - 1)
 
-    except (ipaddress.AddressValueError, ValueError):
-        return "Adresse de réseau ou masque invalide."
+    for i in range(nbZero) :
+        val = 2**i
+        if(val > nbips+1) :
+            break
+
+    pas = val
+    masque = ipaddress.IPv4Address(masque)
+    val = (~(val-1)& 0xFFFFFFFF)
+    nouv_masque=ipaddress.IPv4Address(int(val) | int(masque))
+    print("masque : ", masque, "val : ", val, "masque : ", masque, "nouveau masque des sous reseaux : ",nouv_masque)
+    x=xor(int(nouv_masque), int(masque))
+    print("x:", x)
+    nbDeUnPourLeNombreDeSousReseau = (bin(int(x)).count('1'))
+    nbSR=2**nbDeUnPourLeNombreDeSousReseau
+
+    #nouvMasqueSR, pas, nbSR = calculSR_selonIPS(adresse_reseau, masque, nbips)
+    return str(nouv_masque), pas, nbSR
 
 def calculSR(adresse_reseau, masque, nbSR):
     nombre_de_bits_pour_representer_nbSR = int(math.ceil(math.log2(nbSR)))
@@ -306,7 +305,13 @@ while True:
                 while nbips > ips_maximum_possible_par_sous_reseaux:
                     nbips = int(input("Erreur, l'adresse réseau ne peut pas accueillir autant d'IPs"))
 
+<<<<<<< Updated upstream
                 nouvMasqueSR, pas = calculSR_selonIPS(adresse_reseau, masque, nbips )
+=======
+
+                # Calculate the new subnet mask based on the number of subnets and IPs
+                nouvMasqueSR, pas, nbSR = calculSR_selonIPS(adresse_reseau, masque, nbips)
+>>>>>>> Stashed changes
                 print(nouvMasqueSR, pas)
 
                 print("| N°SR             | Adresse SR       | Adresse BC       | 1er IP           | Dernière IP      | Masque           | Pas   | Nb machines dans le SR  |")
