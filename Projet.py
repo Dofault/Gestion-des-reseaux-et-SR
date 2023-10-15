@@ -34,8 +34,8 @@ def remove_user(username, password):
 def ipInput():
     while True:
         try:
-            #ip = "192.168.10.1"
-            ip = input("\nVeuillez entrez une ip:")
+            ip = "192.168.10.1"
+            #ip = input("\nVeuillez entrez une ip:")
             return ipaddress.ip_address(ip)
         except ValueError:
             print("\nL'ip n'est pas valideS")
@@ -274,10 +274,10 @@ while True:
             print(f"Adresse réseau: {adresse_reseau}")
             print(f"Adresse de broadcast: {adresse_broadcast}")
 
-            print('\nSouhaitez-vous découper les sous-réseaux en définissant :\n')
-            print("1. Le nombre d'hote possible\n")
-            print("2. Le nombre de sous-réseaux souhaité\n")
-            print("3. Le nombre d'IPs souhaité par sous-réseau\n")
+            print('\nDécoupe de sous réseau :\n')
+            print("1. Connaitre le nombre d'hote possible\n")
+            print("2. Definir le nombre de sous-réseaux souhaité\n")
+            print("3. Definir le nombre d'IPs souhaité par sous-réseau\n")
             reponse = input("\nChoisissez une option (1/2/3): ")
             print("\n")
             if reponse == "1":  # Affichage de nombre d'Hote possible et de sous reseaux
@@ -319,7 +319,7 @@ while True:
                     adresse_reseau_actuel = ipaddress.IPv4Address(ipaddress.IPv4Address(adresse_reseau) + (pas * i))
                     broadcast = ipaddress.IPv4Address((adresse_reseau_actuel) + pas - 1)
                     derniereip = ipaddress.IPv4Address((adresse_reseau_actuel) + pas - 2)
-                    print("| %16s | %16s | %16s | %16s | %16s | %16s | %23s |" % (i, adresse_reseau_actuel, broadcast, adresse_reseau_actuel + 1, derniereip, nouvMasqueSR, nbips))
+                    print("| %16s | %16s | %16s | %16s | %16s | %16s | %23s |" % (i+1, adresse_reseau_actuel, broadcast, adresse_reseau_actuel + 1, derniereip, nouvMasqueSR, nbips))
 
             else:
                 print("Option invalide. Choisissez 1, 2 ou 3.")
