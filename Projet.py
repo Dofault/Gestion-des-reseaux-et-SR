@@ -8,6 +8,10 @@ conn = sqlite3.connect("securityDB.db")
 cur = conn.cursor()
 cur.execute("CREATE TABLE IF NOT EXISTS Users (username TEXT NOT NULL, password_hash TEXT NOT NULL)")
 
+class ExceptionClassful(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+
 def hash_password(password):
     salt = bcrypt.gensalt()
     password_hash = bcrypt.hashpw(password.encode(), salt)
@@ -34,11 +38,18 @@ def remove_user(username, password):
 def ipInput():
     while True:
         try:
-            ip = "192.168.10.1"
-            #ip = input("\nVeuillez entrez une ip:")
-            return ipaddress.ip_address(ip)
+            ip = input("\nVeuillez entrez une ip:")
+            first_octet = int(str(ip).split('.')[0])
+            if 1 <=  223:
+                return ipaddress.ip_address(ip)
+            else:
+                raise ExceptionClassful("Cette ip n'est pas une classful")
+            
         except ValueError:
             print("\nL'ip n'est pas valideS")
+
+        except ExceptionClassful:
+            print("Cette ip n'est pas une classful")
 
 def maskInput(ip, decoupe_sous_reseaux):
     if decoupe_sous_reseaux:
@@ -82,7 +93,7 @@ def calculer_adresses(ip_str, masque_str):
         # Calculer le nombre de bits à zéro dans le masque de sous-réseau
         bits_a_zero = bin(masque_binaire).count('0') - 1  # -1 car il compte aussi le zéro de 0b "0b11111111111111111111111100000000"
         sous_reseaux_maximum_possibles = (2 ** (bits_a_zero - 2)) - 1
-        ips_maximum_possible_par_sous_reseaux = (2 ** (bits_a_zero)) - 2
+        ips_maximum_possible_par_sous_reseaux = int(((2 ** (bits_a_zero)) - 4)/2)
 
         # print("sous_reseaux_possibles_maximum : ", sous_reseaux_maximum_possibles, "ips_possible_par_sous_reseaux_maximum :", ips_maximum_possible_par_sous_reseaux)
 
@@ -290,7 +301,6 @@ while True:
                     nbSR = int(input("Erreur, l'adresse réseau ne peut pas accueillir autant de sous-réseaux"))
 
                 nouvMasqueSR, pas = calculSR(adresse_reseau, masque, nbSR)
-                print(nouvMasqueSR, pas)
 
                 print("| N°SR             | Adresse SR       | Adresse BC       | 1er IP           | Dernière IP      | Masque           | Nb machines dans le SR  |")
                 for i in range(nbSR):
@@ -302,25 +312,18 @@ while True:
             if reponse == "3":
                 print("max :", ips_maximum_possible_par_sous_reseaux)
                 nbips = int(input("Combien d'IPs souhaitez-vous avoir par sous-réseau ? "))
-                while nbips > ips_maximum_possible_par_sous_reseaux:
+                while ips_maximum_possible_par_sous_reseaux < nbips < 2:
                     nbips = int(input("Erreur, l'adresse réseau ne peut pas accueillir autant d'IPs"))
 
-<<<<<<< Updated upstream
-                nouvMasqueSR, pas = calculSR_selonIPS(adresse_reseau, masque, nbips )
-=======
-
-                # Calculate the new subnet mask based on the number of subnets and IPs
                 nouvMasqueSR, pas, nbSR = calculSR_selonIPS(adresse_reseau, masque, nbips)
->>>>>>> Stashed changes
-                print(nouvMasqueSR, pas)
 
-                print("| N°SR             | Adresse SR       | Adresse BC       | 1er IP           | Dernière IP      | Masque           | Pas   | Nb machines dans le SR  |")
+                print("| N°SR             | Adresse SR       | Adresse BC       | 1er IP           | Dernière IP      | Masque           | Pas     | Nb machines dans le SR  |")
                 #print("| IP sous-réseau   | 1er IP           | Dernière IP      | IP de broadcast   |")
-                for i in range(nbips):
+                for i in range(nbSR):
                     adresse_reseau_actuel = ipaddress.IPv4Address(ipaddress.IPv4Address(adresse_reseau) + (pas * i))
                     broadcast = ipaddress.IPv4Address((adresse_reseau_actuel) + pas -1)
                     derniereip = ipaddress.IPv4Address((adresse_reseau_actuel) + pas -2)
-                    print("| %16s | %16s | %16s | %16s | %16s | %16s |%6s | %23s |" % (i+1,adresse_reseau_actuel,broadcast ,adresse_reseau_actuel + 1, derniereip,nouvMasqueSR,pas,ips_maximum_possible_par_sous_reseaux))
+                    print("| %16s | %16s | %16s | %16s | %16s | %16s |%8s | %23s |" % (i+1,adresse_reseau_actuel,broadcast ,adresse_reseau_actuel + 1, derniereip,nouvMasqueSR,pas,ips_maximum_possible_par_sous_reseaux))
 
             else:
                 print("Option invalide. Choisissez 1, 2 ou 3.")
