@@ -121,9 +121,9 @@ def calculSR_selonIPS(adresse_reseau, masque, nbips ):
     masque = ipaddress.IPv4Address(masque)
     val = (~(val-1)& 0xFFFFFFFF)
     nouv_masque=ipaddress.IPv4Address(int(val) | int(masque))
-    print("masque : ", masque, "val : ", val, "masque : ", masque, "nouveau masque des sous reseaux : ",nouv_masque)
+    #print("masque : ", masque, "val : ", val, "masque : ", masque, "nouveau masque des sous reseaux : ",nouv_masque)
     x=xor(int(nouv_masque), int(masque))
-    print("x:", x)
+    #print("x:", x)
     nbDeUnPourLeNombreDeSousReseau = (bin(int(x)).count('1'))
     nbSR=2**nbDeUnPourLeNombreDeSousReseau
 
@@ -184,14 +184,14 @@ while True:
             print("\nÉchec de la connexion. Vérifiez vos informations d'identification.")
 
     elif auth_choice == "2":
-        username = input("Nom d'utilisateur : \n")
-        password_hash = input("Mot de passe : \n")
+        username = input("\nNom d'utilisateur : ")
+        password_hash = input("\nMot de passe : ")
         add_user(username, password_hash)
         print("\nUtilisateur ajouté avec succès.\n")
 
     elif auth_choice == "3":
-        username = input("Nom d'utilisateur : \n")
-        password_hash = input("Mot de passe : \n")
+        username = input("\nNom d'utilisateur : ")
+        password_hash = input("\nMot de passe : ")
         if check_password(username, password_hash):
             remove_user(username, password_hash)
             print("\nUtilisateur supprimé avec succès.")
@@ -221,6 +221,7 @@ while True:
     if choix == "1":
     # Demandez à l'utilisateur d'entrer l'adresse IP
         ip = ipInput()
+        print("\n")
         while True:
             print('\nVoulez-vous une découpe en sous-réseaux ? (oui/non) \n')
             print("1. Oui\n")
@@ -231,6 +232,7 @@ while True:
             if reponse == "1":
                 # L'utilisateur souhaite découper en sous-réseaux
                 masque = maskInput(ip, True)
+                print("\n")
                 resultats = calculer_adresses(ip, masque)
                 if isinstance(resultats, tuple):
                     adresse_reseau, adresse_broadcast, adresse_sous_reseau, sous_reseaux_maximum_possibles, ips_maximum_possible_par_sous_reseaux = resultats
@@ -264,14 +266,18 @@ while True:
     elif choix == "2":
         # Demandez à l'utilisateur d'entrer l'adresse IP, le réseau et le masque
         ip = ipInput()
+        print("\n")
         masque = maskInput(ip, True)
+        print("\n")
         reseau = input("\nEntrez l'adresse du réseau : ")
+        print("\n")
         resultat = verifier_appartenance(ip, reseau, masque)
         print(resultat)
 
     elif choix == "3":
         # Demandez à l'utilisateur d'entrer l'adresse IP et le masque
         ip = ipInput()
+        print("\n")
         masque = maskInput(ip, False)
         sous_reseaux_maximum_possibles = int()
         ips_maximum_possible_par_sous_reseaux = int()
@@ -302,14 +308,14 @@ while True:
 
                 nouvMasqueSR, pas = calculSR(adresse_reseau, masque, nbSR)
 
-                print("| N°SR             | Adresse SR       | Adresse BC       | 1er IP           | Dernière IP      | Masque           | Nb machines dans le SR  |")
+                print("| N°SR             | Adresse SR       | Adresse BC       | 1er IP           | Dernière IP      | Masque           | Pas     | Nb machines dans le SR  |")
                 for i in range(nbSR):
                     adresse_reseau_actuel = ipaddress.IPv4Address(ipaddress.IPv4Address(adresse_reseau) + (pas * i))
                     broadcast = ipaddress.IPv4Address((adresse_reseau_actuel) + pas - 1)
                     derniereip = ipaddress.IPv4Address((adresse_reseau_actuel) + pas - 2)
-                    print("| %16s | %16s | %16s | %16s | %16s | %16s | %23s |" % (i+1, adresse_reseau_actuel, broadcast, adresse_reseau_actuel + 1, derniereip, nouvMasqueSR, ips_maximum_possible_par_sous_reseaux))
+                    print("| %16s | %16s | %16s | %16s | %16s | %16s |%8s | %23s |" % (i+1, adresse_reseau_actuel, broadcast, adresse_reseau_actuel + 1, derniereip, nouvMasqueSR,pas,pas-2))
 
-            if reponse == "3":
+            elif reponse == "3":
                 print("max :", ips_maximum_possible_par_sous_reseaux)
                 nbips = int(input("Combien d'IPs souhaitez-vous avoir par sous-réseau ? "))
                 while ips_maximum_possible_par_sous_reseaux < nbips < 2:
@@ -323,7 +329,7 @@ while True:
                     adresse_reseau_actuel = ipaddress.IPv4Address(ipaddress.IPv4Address(adresse_reseau) + (pas * i))
                     broadcast = ipaddress.IPv4Address((adresse_reseau_actuel) + pas -1)
                     derniereip = ipaddress.IPv4Address((adresse_reseau_actuel) + pas -2)
-                    print("| %16s | %16s | %16s | %16s | %16s | %16s |%8s | %23s |" % (i+1,adresse_reseau_actuel,broadcast ,adresse_reseau_actuel + 1, derniereip,nouvMasqueSR,pas,ips_maximum_possible_par_sous_reseaux))
+                    print("| %16s | %16s | %16s | %16s | %16s | %16s |%8s | %23s |" % (i+1,adresse_reseau_actuel,broadcast ,adresse_reseau_actuel + 1, derniereip,nouvMasqueSR,pas,pas-2))
 
             else:
                 print("Option invalide. Choisissez 1, 2 ou 3.")
